@@ -627,7 +627,7 @@ function triggerFireworks() {
 
 // --- 6. RSVP -> GOOGLE SHEET ---
 // Paste your Google Apps Script Web App URL between the quotes (see setup steps).
-const SHEET_URL = "https://script.google.com/macros/s/AKfycbwWIDVxJF_vZHyuXRIdKJxUPVW7zleQAwLl1TrN4Z87v5hkJjo3-PjlMMs6hedpBpup/exec";
+const SHEET_URL = "https://script.google.com/macros/s/AKfycbzfxUYTM0MVk1VPjDyfjFwNEbBH9o8coMLdCLV62o2rnfkpMhT701Nm3dhTrNdOE6l0/exec";
 // Used only if SHEET_URL is empty, so no RSVP is lost before the sheet is connected.
 const FALLBACK_WHATSAPP = "201284589595";
 
@@ -651,10 +651,9 @@ async function sendRSVP(event) {
     const oldText = btn.innerText;
     btn.innerText = 'Sending...';
     try {
-        await fetch(SHEET_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            body: new URLSearchParams({ name, attendance, wish })
+        await fetch(SHEET_URL + '?' + new URLSearchParams({ name, attendance, wish }).toString(), {
+            method: 'GET',
+            mode: 'no-cors'
         });
         confetti();
         form.reset();
