@@ -399,8 +399,8 @@ footer{text-align:center; padding:4rem 1.5rem; background: var(--bg-sec); border
           <div class="input-group">
               <label>Attendance</label>
               <select id="rsvpAttendance" style="color:var(--cream)">
-                  <option value=❤️"جى طبعا">جى طبعا</option>
-                  <option value=🙈"اكيد طبعا جي">اكيد طبعا جي</option>
+                  <option value="جى طبعا">❤️ جى طبعا</option>
+                  <option value="اكيد طبعا جي">🙈 اكيد طبعا جي</option>
               </select>
           </div>
           
@@ -617,25 +617,45 @@ function triggerFireworks() {
     }, 250);
 }
 
-// --- 6. RSVP WHATSAPP LOGIC ---
-function sendRSVP(event) {
-    event.preventDefault(); 
-    
-    const phoneNumber = "201284589595"; 
+// --- 6. RSVP -> GOOGLE SHEET ---
+// Paste your Google Apps Script Web App URL between the quotes (see setup steps).
+const SHEET_URL = "https://script.google.com/macros/s/AKfycbwm-aG6h5KSKu4JRmh_K-jTpJcNaDxt-soAMPDmXRWw8oSdAjgW2O7-VPmSf3NPe18G/exec";
+// Used only if SHEET_URL is empty, so no RSVP is lost before the sheet is connected.
+const FALLBACK_WHATSAPP = "201284589595";
 
-    const name = document.getElementById('rsvpName').value;
-    const wish = document.getElementById('rsvpWish').value || 'مفيش أمنية معينة';
+async function sendRSVP(event) {
+    event.preventDefault();
+
+    const name = document.getElementById('rsvpName').value.trim();
+    const wish = document.getElementById('rsvpWish').value.trim() || 'مفيش أمنية معينة';
     const attendance = document.getElementById('rsvpAttendance').value;
+    const btn = event.target.querySelector('.submit-btn');
+    const form = event.target;
 
-    const message = `أهلاً مروان ونور! 🥳\n\nأنا: ${name}\nحالة الحضور: ${attendance}\nأمنيتي ليكم: ${wish}\n\nألف مبروك يا غاليين! ❤️`;
+    if (!SHEET_URL) {
+        const message = `أهلاً مروان ونور! 🥳\n\nأنا: ${name}\nحالة الحضور: ${attendance}\nأمنيتي ليكم: ${wish}\n\nألف مبروك يا غاليين! ❤️`;
+        confetti();
+        setTimeout(() => window.open(`https://wa.me/${FALLBACK_WHATSAPP}?text=${encodeURIComponent(message)}`, '_blank'), 1200);
+        return;
+    }
 
-    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
-
-    confetti();
-
-    setTimeout(() => {
-        window.open(whatsappUrl, '_blank');
-    }, 1200);
+    btn.disabled = true;
+    const oldText = btn.innerText;
+    btn.innerText = 'Sending...';
+    try {
+        await fetch(SHEET_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            body: new URLSearchParams({ name, attendance, wish })
+        });
+        confetti();
+        form.reset();
+        btn.innerText = 'شكراً ❤️ وصلنا ردك';
+        setTimeout(() => { btn.innerText = oldText; btn.disabled = false; }, 4000);
+    } catch (err) {
+        btn.innerText = 'حصلت مشكلة، حاول تاني';
+        setTimeout(() => { btn.innerText = oldText; btn.disabled = false; }, 3000);
+    }
 }
 
 // --- 7. SCROLL ANIMATION ---
